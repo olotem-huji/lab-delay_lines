@@ -80,8 +80,6 @@ def plot_time_until_return(data):
 if __name__ == "__main__":
     dir_name = r"C:\Physics\Year 2\Lab\Delay Lines\Week 1"
     for resistance in [0, 100, 200, 300, 400, 500, 600, 700, 800, 900]:
-        plot_scope(filename=fr"{dir_name}\{resistance} ohm new.csv", should_plot=True)
+        plot_scope(filename=fr"{dir_name}\{resistance} ohm new.csv", should_plot=False)
     plot_return_factor_by_resistance(return_factor_by_resistance)
     plot_time_until_return(time_until_return)
-
-
