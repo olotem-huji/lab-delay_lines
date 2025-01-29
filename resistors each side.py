@@ -5,22 +5,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
-print(plt.style.available)
-plt.style.use("ggplot")
-
-# plt.rcParams.update({
-#     # 'figure.figsize': (6, 4),    # Set figure size (width, height) in inches
-#     'figure.dpi': 300,          # Set DPI for high resolution
-#     # 'font.size': 12,             # Set font size
-#     # 'axes.titlesize': 14,        # Set axes title font size
-#     # 'axes.labelsize': 12,        # Set axes labels font size
-#     # 'xtick.labelsize': 10,       # Set x-axis tick font size
-#     # 'ytick.labelsize': 10,       # Set y-axis tick font size
-#     'lines.linewidth': 1,        # Set line width
-#     'lines.markersize': 3,       # Set marker size
-#     'axes.grid': True,           # Enable grid for better readability
-#     'grid.alpha': 0.3,           # Grid transparency
-# })
+plt.style.use("physrev.mplstyle")
 
 
 peak_offset = {}
@@ -58,17 +43,21 @@ def plot_scope(filename, should_plot=True):
 def plot_peak_offset():
     x = np.array(list(peak_offset.keys()))
     y = np.array(list(peak_offset.values()))
+    y = y - y[0] ## Normalize
+    y = y * 1e6
     params, _ = curve_fit(linear_model, x, y)
     slope, intercept = params
-    plt.scatter(x, y)
-    plt.plot(x, slope * x + intercept,
-             label=f"{round(slope*1e9)/1e9}*x + {round(intercept*1e9)/1e9}",
-             color="red", linestyle="--")
-    plt.xlabel("Steps")
-    plt.ylabel("Peak Offset [sec]")
-    plt.title("Delay Between Steps")
+    plt.scatter(x, y, s=10)
+    fitted_x = np.linspace(min(x)*0.95, max(x)*1.05, 100)
+    plt.plot(fitted_x, slope * fitted_x + intercept,
+             label=fr"Linear Fit: $\Delta$$t = {slope*10:.2f}*10^{{-7}}s + {intercept*100:.3f}*10^{{-8}}$",
+             color="orange",
+             linestyle="--")
+    plt.xlabel("Step")
+    plt.ylabel(r"Peak Offset [$\mu$s]")
+    # plt.title("Delay Between Steps")
     plt.legend()
-    plt.savefig(r"C:\Physics\Year 2\Lab\Delay Lines\Week 2\Delay Between Steps.png", dpi=300)
+    plt.savefig(r"C:\Physics\Year 2\Lab\Delay Lines\Graphs\Delay Between Steps.png", dpi=300)
     plt.show()
 
 def plot_peak_decay():
@@ -92,5 +81,5 @@ if __name__ == "__main__":
     dir_name = r"C:\Physics\Year 2\Lab\Delay Lines\Week 2\Resistors Each Side"
     for step in [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]:
         plot_scope(filename=fr"{dir_name}\{step} step diff.csv", should_plot=False)
-    # plot_peak_offset()
-    plot_peak_decay()
+    plot_peak_offset()
+    # plot_peak_decay()

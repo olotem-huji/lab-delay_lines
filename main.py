@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
+plt.style.use("physrev.mplstyle")
 DELAY = 1.1940002e-05
 
 return_factor_by_resistance = {}
@@ -18,19 +19,20 @@ def get_extremal(data):
     return extremal_point, extremal_index
 
 
-def return_factor_model(R, Z_0):
-    return (R - Z_0)/(R + Z_0)
+def return_factor_model(R, Z_0, a):
+    return (R - Z_0)/(R + Z_0) * a
 
 
 def get_characteristic_impedance(return_by_resistance):
-    initial_guess = [330]  # Initial guess for Z_0
+    initial_guess = [440, 0.4]  # Initial guess for Z_0
     params, covariance = curve_fit(return_factor_model, np.array(list(return_by_resistance.keys())),
                                    np.array(list(return_by_resistance.values())), p0=initial_guess)
 
     # Extract the fitted parameter
     Z_0_fit = params[0]
+    a_fit = params[1]
     print(f"Fitted Z_0: {Z_0_fit}")
-    return Z_0_fit
+    return Z_0_fit, a_fit
 
 
 def plot_scope(filename, should_plot=True):
@@ -52,28 +54,40 @@ def plot_scope(filename, should_plot=True):
         plt.plot(time, voltage)
         plt.xlabel("Time [s]")
         plt.ylabel("Voltage [V]")
-        plt.title(f"Voltage by Time, Around Signal Start.\n Resistance = {resistance} ohm")
+        # plt.title(f"Voltage by Time, Around Signal Start.\n Resistance = {resistance} ohm")
         plt.legend()
+        if "100" in filename:
+            plt.savefig(r"C:\Physics\Year 2\Lab\Delay Lines\Graphs\Appendix\Amplitude By Resistance 100 ohm.png",
+                        dpi=300)
+        if "400" in filename:
+            plt.savefig(r"C:\Physics\Year 2\Lab\Delay Lines\Graphs\Appendix\Amplitude By Resistance 400 ohm.png",
+                        dpi=300)
         plt.show()
 
 
 def plot_return_factor_by_resistance(data):
-    z = get_characteristic_impedance(data)
-    plt.plot(data.keys(), data.values())
-    fitted_voltages = [return_factor_model(r, z) for r in data.keys()]
-    plt.plot(data.keys(), fitted_voltages, label=f"Characteristic Impedance: {z:.2f} ohm")
-    plt.title("Return Factor by Resistance")
-    plt.xlabel("Resistance [ohm]")
+    z, a = get_characteristic_impedance(data)
+    plt.scatter(data.keys(), data.values(), s=10)
+    fitted_x = np.linspace(min(data.keys())*0.95, max(data.keys())*1.05, 100)
+    fitted_voltages = return_factor_model(fitted_x, z, a)
+    plt.plot(fitted_x, fitted_voltages,
+             label=(fr"Rational Fit: $\Gamma = {a:.2f}\frac{{R - Z_0}}{{R + Z_0}}$" + "\n" + fr"$Z_0$ = {z:.2f} $\Omega$"),
+             linestyle="--",
+             color="orange")
+    # plt.title("Return Factor by Resistance")
+    plt.xlabel(r"Resistance [$\Omega$]")
     plt.ylabel("Return Factor [%]")
     plt.legend()
+    plt.savefig(r"C:\Physics\Year 2\Lab\Delay Lines\Graphs\Return Factor By Resistance.png", dpi=300)
     plt.show()
 
 
 def plot_time_until_return(data):
-    plt.plot(data.keys(), data.values())
-    plt.title("Time Until Return By Resistance")
-    plt.xlabel("Resistance [ohm]")
-    plt.ylabel("Time Until Return [s]")
+    plt.scatter(data.keys(), data.values(), s=10)
+    # plt.title("Time Until Return By Resistance")
+    plt.xlabel(r"Resistance [$\Omega$]")
+    plt.ylabel(r"Time Until Return [$s$]")
+    plt.savefig(r"C:\Physics\Year 2\Lab\Delay Lines\Graphs\Appendix\Time Until Return.png", dpi=300)
     plt.show()
 
 

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
 
-plt.style.use("ggplot")
+plt.style.use("physrev.mplstyle")
 
 
 DELAY_BETWEEN_STEPS = 1.83e-7  # sec
@@ -55,8 +55,10 @@ def plot_scope(filename, should_plot=True):
     peak_indexes = find_n_peaks(df, step, 4, 100)  # Adjust `distance` and `height` as needed
     step_peaks[step] = [(df["time"][ind], df["voltage"][ind]) for ind in peak_indexes]
     if should_plot:
-        plt.plot(df["time"], df["voltage"], alpha=0.7, label=f"Start Step = {step}")
-        plt.scatter(df["time"][peak_indexes], df["voltage"][peak_indexes])
+        plt.plot(df["time"], df["voltage"],
+                 # alpha=0.7,
+                 label=f"Start Step = {step}")
+        plt.scatter(df["time"][peak_indexes], df["voltage"][peak_indexes], s=10)
         plt.xlabel("Time [s]")
         plt.ylabel("Voltage [V]")
         plt.title(f"Voltage by Time, Infinite Returns")
@@ -82,32 +84,35 @@ def plot_decay():
         for v in values:
             x = np.append(x, k)
             y = np.append(y, v)
-    plt.scatter(x, y)
-    params, _ = curve_fit(exponential_model, x, y, p0=(2, -0.02))
+
+    normalization_factor = 1 / y[np.where(x == 0)[0]][0]
+    normalized_y = [_*normalization_factor for _ in y]
+    plt.scatter(x, normalized_y, s=10)
+    params, _ = curve_fit(exponential_model, x, normalized_y, p0=(2, -0.02))
     A, gamma = params
     print(A, gamma)
     fit_x = np.linspace(min(x) * 0.9, max(x) * 1.1, 100)
     plt.plot(fit_x, exponential_model(fit_x, A, gamma),
-             label=f"{round(A*1e4)/1e4} * e**({round(gamma*1e4)/1e4}*x)",
-             color="red",
+             label=f"Exponential Fit: $A = {round(A*1e4)/1e4}e^{{{round(gamma*1e4)/1e4}s}}$",
+             color="orange",
              linestyle="--")
-    plt.title("Voltage by Step, Infinite Returns")
-    plt.xlabel("Steps")
-    plt.ylabel("Voltage [V]")
+    # plt.title("Voltage by Step, Infinite Returns")
+    plt.xlabel("Step")
+    plt.ylabel("Normalized Amplitude [V]")
     plt.legend()
-    # plt.savefig(r"C:\Physics\Year 2\Lab\Delay Lines\Week 2\Decay Between Steps - Infinite Returns.png", dpi=300)
+    plt.savefig(r"C:\Physics\Year 2\Lab\Delay Lines\Graphs\Decay Between Steps - Infinite Returns.png", dpi=300)
     plt.show()
 
 
 if __name__ == "__main__":
     dir_name = r"C:\Physics\Year 2\Lab\Delay Lines\Week 2\Infinite Returns 2"
-    for step in [2, 8, 14, 20]:
-    # for step in [0,
-    #              2, 4, 6, 8, 10, 12, 14, 16, 18, 20,
-    #              # 22, 24, 26, 28, 30
-    #              ]:
+    # for step in [2, 8, 14, 20]:
+    for step in [0,
+                 2, 4, 6, 8, 10, 12, 14, 16, 18, 20,
+                 # 22, 24, 26, 28, 30
+                 ]:
         plot_scope(filename=fr"{dir_name}\{step} steps.csv", should_plot=True)
-    plt.savefig(r"C:\Physics\Year 2\Lab\Delay Lines\Week 2\Infinite Returns Scope.png", dpi=300)
+    # plt.savefig(r"C:\Physics\Year 2\Lab\Delay Lines\Graphs\Infinite Returns Scope.png", dpi=300)
     plt.show()
     plot_decay()
     # plot_return_factor_by_resistance(return_factor_by_resistance)
